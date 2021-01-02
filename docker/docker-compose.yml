@@ -1,0 +1,72 @@
+version: '3.7'
+
+
+
+services:
+
+  web:
+    image: maxiplux/livemarket.io.eprocurment:0.1.100
+    restart: on-failure
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD : postgres
+      DB_NAME: postgres
+      RD_HOST : redis
+      KAFKA_HOST : kafka
+    ports:
+      - "8080:8080"
+    links:
+      - postgres
+      - redis
+      - kafka
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+  graphana:
+    image: grafana/grafana
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    ports:
+      - 3000:3000
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: on-failure
+    volumes:
+      - postgres_data/:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  kafka:
+    image: johnnypark/kafka-zookeeper
+    container_name: kafka
+    restart: on-failure
+    environment:
+      ADVERTISED_HOST: 127.0.0.1
+      NUM_PARTITIONS: 10
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+
+
+  redis:
+    image: redis:5.0.7
+    restart: on-failure
+    ports:
+      - '6379:6379'
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  postgres_data: {}
